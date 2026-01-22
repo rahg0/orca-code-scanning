@@ -1,0 +1,32 @@
+name: Sample Orca FS Scan Workflow
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  orca-fs-scan:
+    name: Orca fs Scan
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_KEY: slrk
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Orca FS Scan
+        uses: orcasecurity/shiftleft-fs-action@v1
+        with:
+          api_token: ${{ secrets.ORCA_SECURITY_API_TOKEN }}
+          project_key: ${{ env.PROJECT_KEY }}
+          format: "sarif"
+          output: "results/"
+          path:
+            "."
+            
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        if: ${{ always() && steps.orcasecurity_fs_scan.outputs.exit_code != 1 }}
+        with:
+          sarif_file: results/file_system.sarif
